@@ -1,0 +1,2345 @@
+Here is the updated, complete, single-file runnable implementation (index.html)
+featuring a richly art-directed visual system across the Hero section, the
+"Where will your curiosity take you?" destination gallery, the Interactive
+Product Preview, Personalized Day 1 Itinerary stops, and the Travel Companion
+Vision section.
+
+What Was Upgraded Visually:
+
+1.  Interactive Hero Photography Switcher (Istanbul): Visitors can now toggle
+    between three authentic editorial views of Istanbul directly inside the hero
+    (Golden Hour on the Bosphorus, Galata & Historic Rooftops, and Balat
+    Courtyards & Café Culture), complete with a secondary floating photography
+    vignette card.
+2.  Enriched "Where will your curiosity take you?" Gallery: Upgraded with
+    high-resolution editorial photography for Istanbul, Cappadocia, Antalya, and
+    Izmir, plus a secondary visual vignette badge, interactive photo-view
+    toggles on each card, and smooth hover zoom transitions.
+3.  Visual Activity Cards in the Interactive Planner & Day 1 Itinerary: Every
+    recommended stop in both the interactive trip builder and the Day 1 Istanbul
+    itinerary now displays an authentic thumbnail photograph alongside its
+    walking time and personalization reason.
+
+Save the code below as index.html and open it in any browser:
+
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>orenda — Travel, thoughtfully personalized.</title>
+  <meta name="description" content="Orenda is an intelligent travel companion that understands how you like to travel, creates personalized itineraries, and adapts as your journey unfolds." />
+  
+  <!-- Google Fonts: Plus Jakarta Sans & Instrument Serif -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ivory: '#FAF8F3',
+            sand: '#F0E9DD',
+            charcoal: '#23352F',
+            teal: '#24594B',
+            'teal-dark': '#1B4338',
+            sage: '#A9B9A4',
+            terracotta: '#D58A68',
+            gold: '#E9D7A8',
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            serif: ['"Instrument Serif"', 'Georgia', 'serif'],
+          },
+          boxShadow: {
+            'editorial': '0 20px 45px -15px rgba(35, 53, 47, 0.09)',
+            'floating': '0 24px 48px -12px rgba(35, 53, 47, 0.18)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React & ReactDOM & Babel for standalone execution -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      background-color: #FAF8F3;
+      color: #23352F;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    .serif-italic {
+      font-family: 'Instrument Serif', serif;
+      font-style: italic;
+    }
+    .serif-regular {
+      font-family: 'Instrument Serif', serif;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #FAF8F3;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #A9B9A4;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    // ==========================================
+    // CURATED HIGH-RESOLUTION EDITORIAL IMAGERY
+    // ==========================================
+    const HERO_SCENES = [
+      {
+        id: "bosphorus",
+        label: "Bosphorus at Golden Hour",
+        location: "Ortaköy & Bosphorus Strait, Istanbul",
+        weather: "22°C • Warm Sunset Breeze",
+        mainImage: "https://images.unsplash.com/photo-1527838832700-5059252407fa?auto=format&fit=crop&w=1600&q=85",
+        detailImage: "https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?auto=format&fit=crop&w=600&q=80",
+        detailCaption: "Evening ferry crossing toward Kadıköy",
+        alt: "Warm golden sunlight over the Bosphorus strait and historic mosque domes in Istanbul"
+      },
+      {
+        id: "rooftops",
+        label: "Galata & Historic Rooftops",
+        location: "Galata & Golden Horn, Istanbul",
+        weather: "21°C • Crisp Morning Light",
+        mainImage: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=1600&q=85",
+        detailImage: "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=600&q=80",
+        detailCaption: "Sunlight over terracotta rooftops & sea",
+        alt: "Panoramic editorial view of Galata Tower, rooftops, and ferries on the water in Istanbul"
+      },
+      {
+        id: "courtyards",
+        label: "Courtyards & Local Culture",
+        location: "Sultanahmet & Historic Peninsula",
+        weather: "23°C • Gentle Afternoon Sun",
+        mainImage: "https://images.unsplash.com/photo-1567449303078-57ad995bd329?auto=format&fit=crop&w=1600&q=85",
+        detailImage: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80",
+        detailCaption: "Artisan Turkish tea & neighborhood tables",
+        alt: "Historic Turkish architecture framed by warm morning light and tranquil walkways"
+      }
+    ];
+
+    const DESTINATIONS = [
+      {
+        id: "Istanbul",
+        name: "Istanbul",
+        tagline: "Where history meets everyday life.",
+        contextLabel: "Two Continents • Culinary & Cultural Depth",
+        themes: ["History", "Architecture", "Food", "Culture"],
+        weather: "21°C • Warm Bosphorus Breeze",
+        image: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=1400&q=85",
+        secondaryImage: "https://images.unsplash.com/photo-1527838832700-5059252407fa?auto=format&fit=crop&w=1400&q=85",
+        vignetteImage: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=400&q=80",
+        vignetteLabel: "Karaköy cafés & Bosphorus ferries",
+        defaultStyles: ["Culture & history", "Food & local experiences", "Hidden gems"]
+      },
+      {
+        id: "Cappadocia",
+        name: "Cappadocia",
+        tagline: "Follow the horizon.",
+        contextLabel: "Anatolian Valleys • Dawn Landscapes",
+        themes: ["Landscapes", "Sunrise", "Nature", "Unique experiences"],
+        weather: "18°C • Crisp Morning Skies",
+        image: "https://images.unsplash.com/photo-1641128324972-af3212f0f6bd?auto=format&fit=crop&w=1400&q=85",
+        secondaryImage: "https://images.unsplash.com/photo-1570939274717-7eda259b50ed?auto=format&fit=crop&w=1400&q=85",
+        vignetteImage: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=400&q=80",
+        vignetteLabel: "Göreme stone terraces at dawn",
+        defaultStyles: ["Nature & adventure", "Hidden gems", "Culture & history"]
+      },
+      {
+        id: "Antalya",
+        name: "Antalya",
+        tagline: "Slow down by the Mediterranean.",
+        contextLabel: "Turquoise Coast • Old Harbor & Cliffs",
+        themes: ["Coastlines", "Relaxation", "Beaches", "Mediterranean charm"],
+        weather: "26°C • Clear Mediterranean Sun",
+        image: "https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?auto=format&fit=crop&w=1400&q=85",
+        secondaryImage: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1400&q=85",
+        vignetteImage: "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=400&q=80",
+        vignetteLabel: "Kaleiçi harbour & limestone coves",
+        defaultStyles: ["Relaxation", "Nature & adventure", "Food & local experiences"]
+      },
+      {
+        id: "Izmir",
+        name: "Izmir",
+        tagline: "Discover the Aegean rhythm.",
+        contextLabel: "Aegean Coast • Olive Groves & Bazaars",
+        themes: ["Coastal life", "Local cuisine", "Historic neighborhoods"],
+        weather: "24°C • Gentle Sea Breeze",
+        image: "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1400&q=85",
+        secondaryImage: "https://images.unsplash.com/photo-1589561454226-796a8aa89b05?auto=format&fit=crop&w=1400&q=85",
+        vignetteImage: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80",
+        vignetteLabel: "Alaçatı stone lanes & Aegean tables",
+        defaultStyles: ["Food & local experiences", "Relaxation", "Culture & history"]
+      }
+    ];
+
+    const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=1200&q=80";
+
+    const SmartImage = ({ src, alt, className, loading = "lazy" }) => {
+      const [imgSrc, setImgSrc] = useState(src);
+      useEffect(() => {
+        setImgSrc(src);
+      }, [src]);
+      return (
+        <img
+          src={imgSrc}
+          alt={alt}
+          loading={loading}
+          onError={() => setImgSrc(FALLBACK_IMAGE)}
+          className={className}
+        />
+      );
+    };
+
+    // ==========================================
+    // CUSTOM SVG ICONS & BRAND MARK
+    // ==========================================
+    const OrendaLogo = ({ className = "w-7 h-7", light = false }) => (
+      <div className="inline-flex items-center gap-2.5 select-none group">
+        <svg className={className} viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect width="36" height="36" rx="10" fill={light ? "#FAF8F3" : "#24594B"} />
+          <path
+            d="M8 23.5C12.5 23.5 14.5 13 20.5 13C24.5 13 26.5 17.5 28.5 17.5"
+            stroke={light ? "#24594B" : "#FAF8F3"}
+            strokeWidth="2.2"
+            strokeLinecap="round"
+          />
+          <circle cx="24.5" cy="11.5" r="2.5" fill="#D58A68" />
+          <path
+            d="M8 26.5H28"
+            stroke="#A9B9A4"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+            strokeDasharray="2 3"
+          />
+        </svg>
+        <span className={`text-2xl font-semibold tracking-tight ${light ? 'text-ivory' : 'text-charcoal'}`}>
+          orenda
+        </span>
+      </div>
+    );
+
+    const Icons = {
+      Sun: () => (
+        <svg className="w-4 h-4 text-terracotta shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+        </svg>
+      ),
+      CloudRain: () => (
+        <svg className="w-4 h-4 text-teal shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 14v6m-8-6v6m4-4v6"/>
+        </svg>
+      ),
+      Walk: () => (
+        <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="5" r="2"/><path d="m10 22 1-5-3-3v-4l4-1 3 3 2 1M14 17l1.5 5"/>
+        </svg>
+      ),
+      Sparkle: () => (
+        <svg className="w-4 h-4 text-teal shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z"/>
+        </svg>
+      ),
+      MapPin: () => (
+        <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+      ),
+      Camera: () => (
+        <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>
+        </svg>
+      ),
+      Heart: ({ filled }) => (
+        <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+          <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+        </svg>
+      ),
+      Refresh: () => (
+        <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>
+        </svg>
+      ),
+      ArrowRight: () => (
+        <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+        </svg>
+      ),
+      Check: () => (
+        <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <path d="M20 6 9 17l-5-5"/>
+        </svg>
+      ),
+      Clock: () => (
+        <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+      ),
+      Menu: () => (
+        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <line x1="4" x2="20" y1="8" y2="8"/><line x1="4" x2="20" y1="16" y2="16"/>
+        </svg>
+      ),
+      Close: () => (
+        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+        </svg>
+      )
+    };
+
+    // ==========================================
+    // CURATED SAMPLE DATA WITH PHOTOGRAPHY
+    // ==========================================
+    const SAMPLE_ACTIVITIES = {
+      "Istanbul": [
+        {
+          time: "09:00",
+          title: "Quiet morning through Sultanahmet & stone courtyards",
+          category: "Culture & history",
+          duration: "2 hrs",
+          transfer: "Start of day",
+          image: "https://images.unsplash.com/photo-1567449303078-57ad995bd329?auto=format&fit=crop&w=400&q=80",
+          tags: ["Culture & history", "Hidden gems"],
+          budgets: ["Budget-friendly", "Comfortable", "Premium"],
+          tripTypes: ["Solo", "Couple", "Family", "Friends"],
+          reason: "Scheduled early so you experience historic architecture before midday crowds."
+        },
+        {
+          time: "11:30",
+          title: "Artisan ceramics & hidden courtyard tea in Çukurcuma",
+          category: "Hidden gems",
+          duration: "1.5 hrs",
+          transfer: "14 min walk",
+          image: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=400&q=80",
+          tags: ["Hidden gems", "Shopping", "Relaxation", "Culture & history"],
+          budgets: ["Comfortable", "Premium", "Budget-friendly"],
+          tripTypes: ["Solo", "Couple", "Friends"],
+          reason: "Matches your interest in authentic neighborhood character at an unhurried pace."
+        },
+        {
+          time: "13:15",
+          title: "Traditional Anatolian lunch at a family-run lokanta",
+          category: "Food & local experiences",
+          duration: "1 hr 15m",
+          transfer: "6 min walk",
+          image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=400&q=80",
+          tags: ["Food & local experiences", "Culture & history"],
+          budgets: ["Budget-friendly", "Comfortable"],
+          tripTypes: ["Solo", "Couple", "Family", "Friends"],
+          reason: "Selected for authentic regional flavors just a short stroll from your morning stop."
+        },
+        {
+          time: "15:00",
+          title: "Golden hour ferry crossing to Moda coastal promenade",
+          category: "Relaxation",
+          duration: "2 hrs",
+          transfer: "20 min scenic ferry",
+          image: "https://images.unsplash.com/photo-1527838832700-5059252407fa?auto=format&fit=crop&w=400&q=80",
+          tags: ["Relaxation", "Nature & adventure", "Food & local experiences"],
+          budgets: ["Budget-friendly", "Comfortable", "Premium"],
+          tripTypes: ["Solo", "Couple", "Family", "Friends"],
+          reason: "Pairs Bosphorus views with a relaxed afternoon walk along the Asian shore."
+        },
+        {
+          time: "18:30",
+          title: "Rooftop Aegean meze overlooking the Golden Horn",
+          category: "Nightlife",
+          duration: "2 hrs",
+          transfer: "15 min transit",
+          image: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80",
+          tags: ["Nightlife", "Food & local experiences", "Shopping"],
+          budgets: ["Comfortable", "Premium"],
+          tripTypes: ["Couple", "Friends", "Solo"],
+          reason: "Rounds out your evening with warm hospitality and panoramic skyline views."
+        }
+      ],
+      "Cappadocia": [
+        {
+          time: "06:30",
+          title: "Sunrise terrace overlook above Love & Pigeon Valleys",
+          category: "Nature & adventure",
+          duration: "1.5 hrs",
+          transfer: "10 min transfer",
+          image: "https://images.unsplash.com/photo-1641128324972-af3212f0f6bd?auto=format&fit=crop&w=400&q=80",
+          tags: ["Nature & adventure", "Relaxation", "Hidden gems"],
+          budgets: ["Budget-friendly", "Comfortable", "Premium"],
+          tripTypes: ["Solo", "Couple", "Family", "Friends"],
+          reason: "Timed for calm morning winds and soft light across the volcanic rock formations."
+        },
+        {
+          time: "09:30",
+          title: "Organic village breakfast in Mustafapaşa (Sinasos)",
+          category: "Food & local experiences",
+          duration: "1.5 hrs",
+          transfer: "15 min drive",
+          image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=400&q=80",
+          tags: ["Food & local experiences", "Culture & history", "Hidden gems"],
+          budgets: ["Budget-friendly", "Comfortable", "Premium"],
+          tripTypes: ["Solo", "Couple", "Family", "Friends"],
+          reason: "A quieter historic Greek-Ottoman stone village away from main tour buses."
+        },
+        {
+          time: "12:00",
+          title: "Carved rock monasteries & fresco walk in Zelve Valley",
+          category: "Culture & history",
+          duration: "2 hrs",
+          transfer: "12 min drive",
+          image: "https://images.unsplash.com/photo-1570939274717-7eda259b50ed?auto=format&fit=crop&w=400&q=80",
+          tags: ["Culture & history", "Nature & adventure"],
+          budgets: ["Budget-friendly", "Comfortable"],
+          tripTypes: ["Solo", "Couple", "Family", "Friends"],
+          reason: "Offers open-air exploration with gentler trails suited to your preferred pace."
+        },
+        {
+          time: "15:30",
+          title: "Hands-on clay pottery studio by the Kızılırmak River",
+          category: "Hidden gems",
+          duration: "1.5 hrs",
+          transfer: "10 min drive",
+          image: "https://images.unsplash.com/photo-1567449303078-57ad995bd329?auto=format&fit=crop&w=400&q=80",
+          tags: ["Hidden gems", "Shopping", "Culture & history"],
+          budgets: ["Comfortable", "Premium"],
+          tripTypes: ["Couple", "Family", "Friends", "Solo"],
+          reason: "Connects you directly with Avanos craft traditions in a calm riverside setting."
+        }
+      ],
+      "Antalya": [
+        {
+          time: "09:30",
+          title: "Morning stroll through Kaleiçi's Ottoman courtyard lanes",
+          category: "Culture & history",
+          duration: "2 hrs",
+          transfer: "Start of day",
+          image: "https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?auto=format&fit=crop&w=400&q=80",
+          tags: ["Culture & history", "Hidden gems", "Shopping"],
+          budgets: ["Budget-friendly", "Comfortable", "Premium"],
+          tripTypes: ["Solo", "Couple", "Family", "Friends"],
+          reason: "Explores shaded historic alleys while morning temperatures are fresh and pleasant."
+        },
+        {
+          time: "12:00",
+          title: "Harbor-side grilled sea bass & citrus salad lunch",
+          category: "Food & local experiences",
+          duration: "1.5 hrs",
+          transfer: "8 min walk",
+          image: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80",
+          tags: ["Food & local experiences", "Relaxation"],
+          budgets: ["Comfortable", "Premium"],
+          tripTypes: ["Solo", "Couple", "Family", "Friends"],
+          reason: "Matches your coastal dining preference overlooking the ancient Roman port."
+        },
+        {
+          time: "14:30",
+          title: "Quiet cliffside cove swim & pine trail near Lara",
+          category: "Relaxation",
+          duration: "2.5 hrs",
+          transfer: "18 min coastal drive",
+          image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=400&q=80",
+          tags: ["Relaxation", "Nature & adventure"],
+          budgets: ["Budget-friendly", "Comfortable", "Premium"],
+          tripTypes: ["Solo", "Couple", "Friends", "Family"],
+          reason: "Prioritizes unhurried Mediterranean water time during the warmest hours."
+        },
+        {
+          time: "18:00",
+          title: "Sunset walk at Lower Düden coastal waterfalls",
+          category: "Nature & adventure",
+          duration: "1.5 hrs",
+          transfer: "10 min walk",
+          image: "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=400&q=80",
+          tags: ["Nature & adventure", "Relaxation"],
+          budgets: ["Budget-friendly", "Comfortable"],
+          tripTypes: ["Solo", "Couple", "Family", "Friends"],
+          reason: "Positioned nearby your afternoon stop to minimize backtracking."
+        }
+      ],
+      "Explore Turkey": [
+        {
+          time: "09:30",
+          title: "Historic Kemeraltı bazaar & hidden caravanserai coffee",
+          category: "Culture & history",
+          duration: "2 hrs",
+          transfer: "Start of day • Izmir",
+          image: "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=400&q=80",
+          tags: ["Culture & history", "Food & local experiences", "Hidden gems"],
+          budgets: ["Budget-friendly", "Comfortable", "Premium"],
+          tripTypes: ["Solo", "Couple", "Friends", "Family"],
+          reason: "Blends centuries-old trade architecture with everyday Aegean coffee culture."
+        },
+        {
+          time: "12:30",
+          title: "Aegean olive oil dishes & wild herb lunch in Urla",
+          category: "Food & local experiences",
+          duration: "2 hrs",
+          transfer: "30 min scenic coastal drive",
+          image: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=400&q=80",
+          tags: ["Food & local experiences", "Relaxation"],
+          budgets: ["Comfortable", "Premium"],
+          tripTypes: ["Couple", "Friends", "Solo", "Family"],
+          reason: "Curated for travelers who value farm-to-table regional gastronomy."
+        },
+        {
+          time: "15:30",
+          title: "Stone windmill walkways & breeze in Alaçatı",
+          category: "Hidden gems",
+          duration: "2 hrs",
+          transfer: "20 min drive",
+          image: "https://images.unsplash.com/photo-1589561454226-796a8aa89b05?auto=format&fit=crop&w=400&q=80",
+          tags: ["Hidden gems", "Shopping", "Relaxation"],
+          budgets: ["Comfortable", "Premium", "Budget-friendly"],
+          tripTypes: ["Couple", "Friends", "Solo"],
+          reason: "Balances boutique discovery with relaxed coastal strolls."
+        },
+        {
+          time: "18:00",
+          title: "Kordon waterfront promenade at sunset",
+          category: "Relaxation",
+          duration: "1.5 hrs",
+          transfer: "Return to bay",
+          image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=400&q=80",
+          tags: ["Relaxation", "Nightlife", "Nature & adventure"],
+          budgets: ["Budget-friendly", "Comfortable", "Premium"],
+          tripTypes: ["Solo", "Couple", "Family", "Friends"],
+          reason: "Ends the day alongside locals enjoying the evening sea breeze."
+        }
+      ]
+    };
+
+    const ADAPTIVE_STATES = {
+      "Too crowded": {
+        label: "Too crowded",
+        badge: "Adapted for calm atmosphere",
+        title: "Süleymaniye Complex & Quiet Courtyard Overlook",
+        time: "11:00 — 12:30",
+        distance: "9 min walk from previous stop",
+        cost: "Free entry • Historic landmark",
+        crowd: "Low crowd level expected",
+        image: "https://images.unsplash.com/photo-1567449303078-57ad995bd329?auto=format&fit=crop&w=700&q=80",
+        explanation: "I found a less crowded alternative that matches your interest in history and Ottoman architecture, with peaceful Bosphorus views."
+      },
+      "Too far": {
+        label: "Too far",
+        badge: "Adapted for minimal walking",
+        title: "Caferağa Medrese Artisan Courtyard",
+        time: "11:00 — 12:15",
+        distance: "3 min flat walk from previous stop",
+        cost: "Free entry • Cultural courtyard",
+        crowd: "Calm shaded courtyard",
+        image: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=700&q=80",
+        explanation: "Replaced with a closer 16th-century courtyard right around the corner so you can preserve your energy while still experiencing local history."
+      },
+      "Too expensive": {
+        label: "Too expensive",
+        badge: "Adapted for budget-conscious discovery",
+        title: "Gülhane Historic Park & Byzantine Cistern Walk",
+        time: "11:00 — 12:30",
+        distance: "6 min walk from previous stop",
+        cost: "No ticket required • Open heritage park",
+        crowd: "Spacious shaded paths",
+        image: "https://images.unsplash.com/photo-1527838832700-5059252407fa?auto=format&fit=crop&w=700&q=80",
+        explanation: "Switched to a storied palace garden walk and viewpoint that keeps the historic atmosphere without high museum admission fees."
+      },
+      "Not for me": {
+        label: "Not for me",
+        badge: "Shifted to local culinary & neighborhood life",
+        title: "Historic Spice Quarter Roasters & Tasting Walk",
+        time: "11:00 — 12:30",
+        distance: "8 min walk from previous stop",
+        cost: "Pay-as-you-taste • Local market",
+        crowd: "Lively neighborhood pace",
+        image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=700&q=80",
+        explanation: "Pivoted away from formal monuments toward living food culture and neighborhood artisans."
+      },
+      "Find something similar": {
+        label: "Find something similar",
+        badge: "Similar architectural depth nearby",
+        title: "Rüstem Pasha Tilework Sanctuary",
+        time: "11:00 — 12:15",
+        distance: "10 min walk from previous stop",
+        cost: "Free entry • Hidden architectural gem",
+        crowd: "Quiet elevated terrace",
+        image: "https://images.unsplash.com/photo-1567449303078-57ad995bd329?auto=format&fit=crop&w=700&q=80",
+        explanation: "Kept the focus on extraordinary 16th-century Iznik craftsmanship in an intimate setting tucked above the street."
+      },
+      "Love it": {
+        label: "Love it",
+        badge: "Preference saved to your profile",
+        title: "Topkapı Palace Inner Courtyard & Treasury",
+        time: "11:00 — 13:00",
+        distance: "5 min walk from previous stop",
+        cost: "Ticketed landmark • Iconic history",
+        crowd: "Popular landmark • Best visited before noon",
+        image: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=700&q=80",
+        explanation: "Noted! Orenda will prioritize iconic imperial history and architectural landmarks in your future afternoons."
+      }
+    };
+
+    // ==========================================
+    // MAIN APPLICATION COMPONENT
+    // ==========================================
+    function App() {
+      const [scrolled, setScrolled] = useState(false);
+      const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+      const [modalOpen, setModalOpen] = useState(false);
+
+      // Hero interactive scene state
+      const [heroSceneIndex, setHeroSceneIndex] = useState(0);
+
+      // Section 3 Interactive Planner State
+      const [selectedDestination, setSelectedDestination] = useState("Istanbul");
+      const [selectedStyles, setSelectedStyles] = useState(["Culture & history", "Food & local experiences", "Hidden gems"]);
+      const [selectedPace, setSelectedPace] = useState("Balanced");
+      const [selectedBudget, setSelectedBudget] = useState("Comfortable");
+      const [selectedTripType, setSelectedTripType] = useState("Couple");
+      const [planGeneratedBanner, setPlanGeneratedBanner] = useState(false);
+
+      // Section 4 Step 3 Mini interactive state
+      const [step3Action, setStep3Action] = useState("default");
+
+      // Section 5 Detailed Istanbul Day 1 interactive state
+      const [selectedStopIndex, setSelectedStopIndex] = useState(0);
+
+      // Section 6 Adaptive Planning Demo State
+      const [activeFeedback, setActiveFeedback] = useState("Too crowded");
+
+      // Section 7 Destination Gallery Alternate Photo State
+      const [altPhotoMap, setAltPhotoMap] = useState({});
+
+      // Section 8 Future Vision Companion Scenario State
+      const [companionScenario, setCompanionScenario] = useState("rain");
+      const [companionResolution, setCompanionResolution] = useState(null);
+
+      // Early Access Modal Form State
+      const [email, setEmail] = useState("");
+      const [modalDestination, setModalDestination] = useState("Istanbul");
+      const [formError, setFormError] = useState("");
+      const [formSubmitted, setFormSubmitted] = useState(false);
+
+      useEffect(() => {
+        const handleScroll = () => setScrolled(window.scrollY > 24);
+        window.addEventListener("scroll", handleScroll, { passive: true });
+        return () => window.removeEventListener("scroll", handleScroll);
+      }, []);
+
+      const toggleStyle = (style) => {
+        setSelectedStyles((prev) => {
+          if (prev.includes(style)) {
+            return prev.length > 1 ? prev.filter((s) => s !== style) : prev;
+          }
+          return [...prev, style];
+        });
+      };
+
+      const toggleDestPhoto = (e, id) => {
+        e.stopPropagation();
+        setAltPhotoMap((prev) => ({ ...prev, [id]: !prev[id] }));
+      };
+
+      const handleSelectDestinationInspiration = (destName, defaultStyles) => {
+        const targetDest = destName === "Izmir" ? "Explore Turkey" : destName;
+        setSelectedDestination(targetDest);
+        if (defaultStyles) setSelectedStyles(defaultStyles);
+        setPlanGeneratedBanner(true);
+        const el = document.getElementById("interactive-planner");
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      };
+
+      const filteredItinerary = useMemo(() => {
+        const pool = SAMPLE_ACTIVITIES[selectedDestination] || SAMPLE_ACTIVITIES["Istanbul"];
+        const scored = pool.map((item) => {
+          const styleMatches = item.tags.filter((t) => selectedStyles.includes(t)).length;
+          const budgetMatch = item.budgets.includes(selectedBudget) ? 1 : 0;
+          const tripMatch = item.tripTypes.includes(selectedTripType) ? 1 : 0;
+          return { ...item, score: styleMatches * 2 + budgetMatch + tripMatch };
+        });
+
+        let count = 3;
+        if (selectedPace === "Relaxed") count = 2;
+        if (selectedPace === "Packed with experiences") count = 4;
+
+        return scored.slice(0, count);
+      }, [selectedDestination, selectedStyles, selectedPace, selectedBudget, selectedTripType]);
+
+      const handleEarlyAccessSubmit = (e) => {
+        e.preventDefault();
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          setFormError("Please enter a valid email address.");
+          return;
+        }
+        setFormError("");
+        setFormSubmitted(true);
+      };
+
+      const openEarlyAccess = (prefillDest) => {
+        if (prefillDest) setModalDestination(prefillDest);
+        setModalOpen(true);
+      };
+
+      const day1Schedule = [
+        {
+          time: "09:00",
+          title: "Explore a historic landmark in Sultanahmet",
+          category: "History & Architecture",
+          duration: "1 hr 45m",
+          walkTime: "Start of morning",
+          weather: "19°C • Morning sun",
+          image: "https://images.unsplash.com/photo-1567449303078-57ad995bd329?auto=format&fit=crop&w=600&q=80",
+          explanation: "Selected because you enjoy history and prefer a relaxed pace before the midday rush.",
+          coords: { x: 28, y: 68 }
+        },
+        {
+          time: "11:00",
+          title: "Discover a nearby cultural attraction & tiled courtyard",
+          category: "Culture & Craft",
+          duration: "1 hr 30m",
+          walkTime: "7 min walk from previous stop",
+          weather: "21°C • Clear skies",
+          image: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=600&q=80",
+          explanation: "Only a short walk from your previous stop, minimizing transit fatigue.",
+          coords: { x: 42, y: 52 }
+        },
+        {
+          time: "13:00",
+          title: "Enjoy a traditional Turkish lunch at a neighborhood lokanta",
+          category: "Local Cuisine",
+          duration: "1 hr 15m",
+          walkTime: "5 min walk along shaded side street",
+          weather: "23°C • Warm afternoon",
+          image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80",
+          explanation: "Chosen for authentic seasonal dishes away from tourist-heavy menus.",
+          coords: { x: 55, y: 46 }
+        },
+        {
+          time: "15:00",
+          title: "Wander through a historic hillside neighborhood",
+          category: "Neighborhood Discovery",
+          duration: "1 hr 45m",
+          walkTime: "12 min scenic walk",
+          weather: "22°C • Gentle breeze",
+          image: "https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?auto=format&fit=crop&w=600&q=80",
+          explanation: "Matches your curiosity for local cafés, timber architecture, and unhurried exploration.",
+          coords: { x: 68, y: 34 }
+        },
+        {
+          time: "17:00",
+          title: "Relax at a scenic waterfront location by the Bosphorus",
+          category: "Waterfront & Sunset",
+          duration: "1 hr 30m",
+          walkTime: "8 min downhill walk to shore",
+          weather: "20°C • Golden hour",
+          image: "https://images.unsplash.com/photo-1527838832700-5059252407fa?auto=format&fit=crop&w=600&q=80",
+          explanation: "Paced so you can sit by the water with Turkish tea as ferries cross at sunset.",
+          coords: { x: 82, y: 24 }
+        }
+      ];
+
+      const currentHeroScene = HERO_SCENES[heroSceneIndex];
+
+      return (
+        <div className="min-h-screen flex flex-col bg-ivory text-charcoal selection:bg-teal selection:text-ivory">
+          
+          {/* ==========================================
+              1. NAVIGATION
+          ========================================== */}
+          <header
+            className={`fixed top-0 inset-x-0 z-40 transition-all duration-300 ${
+              scrolled
+                ? "bg-ivory/95 backdrop-blur-md border-b border-charcoal/10 py-3.5 shadow-sm"
+                : "bg-ivory/80 backdrop-blur-sm py-5"
+            }`}
+          >
+            <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 flex items-center justify-between">
+              <a href="#" aria-label="Orenda Home" className="focus:outline-none focus-visible:ring-2 focus-visible:ring-teal rounded-lg">
+                <OrendaLogo />
+              </a>
+
+              <nav className="hidden md:flex items-center gap-9 text-sm font-medium text-charcoal/80" aria-label="Main Navigation">
+                <a href="#how-it-works" className="hover:text-teal transition-colors">How it works</a>
+                <a href="#features" className="hover:text-teal transition-colors">Features</a>
+                <a href="#explore" className="hover:text-teal transition-colors">Explore</a>
+                <a href="#our-vision" className="hover:text-teal transition-colors">Our vision</a>
+              </nav>
+
+              <div className="hidden md:flex items-center gap-4">
+                <a
+                  href="#interactive-planner"
+                  className="inline-flex items-center justify-center px-5 py-2.5 rounded-full bg-teal text-ivory text-sm font-medium hover:bg-teal-dark transition-all shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-teal"
+                >
+                  Plan my trip
+                </a>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg text-charcoal hover:bg-sand/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal"
+                aria-expanded={mobileMenuOpen}
+                aria-label="Toggle navigation menu"
+              >
+                {mobileMenuOpen ? <Icons.Close /> : <Icons.Menu />}
+              </button>
+            </div>
+
+            {mobileMenuOpen && (
+              <div className="md:hidden bg-ivory border-b border-charcoal/10 px-6 pt-4 pb-6 space-y-4 shadow-lg">
+                <div className="flex flex-col space-y-3 text-base font-medium text-charcoal">
+                  <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="py-1 hover:text-teal">How it works</a>
+                  <a href="#features" onClick={() => setMobileMenuOpen(false)} className="py-1 hover:text-teal">Features</a>
+                  <a href="#explore" onClick={() => setMobileMenuOpen(false)} className="py-1 hover:text-teal">Explore</a>
+                  <a href="#our-vision" onClick={() => setMobileMenuOpen(false)} className="py-1 hover:text-teal">Our vision</a>
+                </div>
+                <div className="pt-2">
+                  <a
+                    href="#interactive-planner"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full inline-flex items-center justify-center px-5 py-3 rounded-full bg-teal text-ivory text-sm font-medium hover:bg-teal-dark transition-colors"
+                  >
+                    Plan my trip
+                  </a>
+                </div>
+              </div>
+            )}
+          </header>
+
+          <main className="flex-grow pt-24 md:pt-28">
+            {/* ==========================================
+                2. HERO SECTION (WITH EDITORIAL ISTANBUL PHOTOGRAPHY & SCENE SWITCHER)
+            ========================================== */}
+            <section className="relative overflow-hidden pt-4 pb-20 lg:pt-10 lg:pb-28">
+              <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-10 items-center">
+                  
+                  {/* Left Column */}
+                  <div className="lg:col-span-6 space-y-7">
+                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sand border border-charcoal/10">
+                      <span className="w-2 h-2 rounded-full bg-terracotta"></span>
+                      <span className="text-xs font-semibold tracking-wider uppercase text-charcoal/80">
+                        YOUR PERSONAL AI TRAVEL COMPANION
+                      </span>
+                    </div>
+
+                    <h1 className="text-4xl sm:text-5xl lg:text-[3.65rem] font-semibold tracking-tight text-charcoal leading-[1.08]">
+                      Travel your way.{" "}
+                      <span className="block mt-1 serif-italic font-normal text-teal text-5xl sm:text-6xl lg:text-[4.1rem]">
+                        Every step of the journey.
+                      </span>
+                    </h1>
+
+                    <p className="text-lg sm:text-xl text-charcoal/80 leading-relaxed max-w-xl font-normal">
+                      Discover places you'll love, build an itinerary around your preferences, and make every day of your trip feel like it was planned just for you.
+                    </p>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
+                      <a
+                        href="#interactive-planner"
+                        className="inline-flex items-center justify-center gap-2.5 px-7 py-4 rounded-full bg-teal text-ivory text-base font-medium hover:bg-teal-dark transition-all shadow-sm hover:shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-teal"
+                      >
+                        <span>Plan my trip</span>
+                        <Icons.ArrowRight />
+                      </a>
+                      <a
+                        href="#how-it-works"
+                        className="inline-flex items-center justify-center px-7 py-4 rounded-full bg-sand/80 text-charcoal text-base font-medium hover:bg-sand transition-colors border border-charcoal/10"
+                      >
+                        Discover how it works
+                      </a>
+                    </div>
+
+                    <div className="pt-2 border-t border-charcoal/10 max-w-md">
+                      <p className="text-sm text-charcoal/70 leading-relaxed">
+                        Personalized plans. Thoughtful recommendations. More time for what matters.
+                        <span className="block text-xs text-teal font-medium mt-1">
+                          Initial destination coverage: Turkey — crafted for curious travelers.
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Art-Directed Istanbul Photography + Layered Itinerary Interface */}
+                  <div className="lg:col-span-6 relative">
+                    
+                    {/* Main Editorial Image Frame */}
+                    <div className="relative rounded-3xl overflow-hidden shadow-editorial border border-charcoal/10 bg-sand aspect-[4/4.8] sm:aspect-[16/13.5] lg:aspect-[4/4.55]">
+                      <SmartImage
+                        src={currentHeroScene.mainImage}
+                        alt={currentHeroScene.alt}
+                        loading="eager"
+                        className="w-full h-full object-cover object-center transition-all duration-700"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-charcoal/70 via-charcoal/20 to-charcoal/10" />
+
+                      {/* Top Weather & Location Pill */}
+                      <div className="absolute top-4 left-4 right-4 sm:top-5 sm:left-5 sm:right-5 flex flex-wrap items-center justify-between gap-2">
+                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-ivory/95 backdrop-blur-md text-xs font-medium text-charcoal shadow-sm">
+                          <Icons.MapPin />
+                          <span>{currentHeroScene.location}</span>
+                        </div>
+                        <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-ivory/95 backdrop-blur-md text-xs font-medium text-charcoal shadow-sm">
+                          <Icons.Sun />
+                          <span>{currentHeroScene.weather}</span>
+                        </div>
+                      </div>
+
+                      {/* Secondary Editorial Vignette Photo Badge (Desktop / Tablet) */}
+                      <div className="hidden sm:flex items-center gap-3 absolute top-16 right-5 bg-ivory/95 backdrop-blur-md p-2 pr-3.5 rounded-2xl shadow-floating border border-charcoal/10 max-w-[235px]">
+                        <SmartImage
+                          src={currentHeroScene.detailImage}
+                          alt={currentHeroScene.detailCaption}
+                          className="w-12 h-12 rounded-xl object-cover shrink-0"
+                        />
+                        <div className="text-[11px] leading-snug">
+                          <span className="font-semibold text-teal block">Atmospheric Moment</span>
+                          <span className="text-charcoal/80">{currentHeroScene.detailCaption}</span>
+                        </div>
+                      </div>
+
+                      {/* Layered Floating Product Preview Card */}
+                      <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 bg-ivory/98 backdrop-blur-md rounded-2xl p-5 sm:p-6 shadow-floating border border-charcoal/10">
+                        <div className="flex items-center justify-between border-b border-charcoal/10 pb-3.5 mb-3.5">
+                          <div>
+                            <span className="text-[11px] font-semibold uppercase tracking-widest text-teal block">
+                              YOUR ISTANBUL ESCAPE
+                            </span>
+                            <h2 className="text-base sm:text-lg font-semibold text-charcoal mt-0.5">
+                              Day 1 • Historic Streets & Courtyards
+                            </h2>
+                          </div>
+                          {/* Mini Route SVG Map Preview */}
+                          <div className="flex items-center gap-2 bg-sand/80 px-3 py-1.5 rounded-xl border border-charcoal/10">
+                            <svg className="w-12 h-7" viewBox="0 0 60 32" fill="none" aria-hidden="true">
+                              <path d="M6 26 C18 24, 24 10, 36 14 C44 16, 48 6, 54 6" stroke="#24594B" strokeWidth="2" strokeLinecap="round" strokeDasharray="2 2"/>
+                              <circle cx="6" cy="26" r="3" fill="#24594B" />
+                              <circle cx="32" cy="13" r="2.5" fill="#D58A68" />
+                              <circle cx="54" cy="6" r="3" fill="#24594B" />
+                            </svg>
+                            <span className="text-[11px] font-medium text-charcoal/80">4 stops</span>
+                          </div>
+                        </div>
+
+                        {/* Timeline Items */}
+                        <div className="space-y-2 text-xs sm:text-sm">
+                          <div className="flex items-center justify-between py-1 px-2.5 rounded-lg bg-sand/55">
+                            <div className="flex items-center gap-3">
+                              <span className="font-semibold text-teal tabular-nums">09:00</span>
+                              <span className="font-medium text-charcoal">Explore the historic city</span>
+                            </div>
+                            <span className="text-[11px] text-charcoal/65 hidden sm:inline">Calm morning</span>
+                          </div>
+
+                          <div className="flex items-center justify-between py-1 px-2.5 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <span className="font-semibold text-teal tabular-nums">11:30</span>
+                              <span className="font-medium text-charcoal">Discover a hidden courtyard</span>
+                            </div>
+                            <span className="inline-flex items-center gap-1 text-[11px] text-charcoal/70">
+                              <Icons.Walk /> 8m walk
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between py-1 px-2.5 rounded-lg bg-sand/55">
+                            <div className="flex items-center gap-3">
+                              <span className="font-semibold text-teal tabular-nums">13:00</span>
+                              <span className="font-medium text-charcoal">Local Turkish lunch</span>
+                            </div>
+                            <span className="inline-flex items-center gap-1 text-[11px] text-charcoal/70">
+                              <Icons.Walk /> 5m walk
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between py-1 px-2.5 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <span className="font-semibold text-teal tabular-nums">15:00</span>
+                              <span className="font-medium text-charcoal">Wander through vibrant streets</span>
+                            </div>
+                            <span className="inline-flex items-center gap-1 text-[11px] text-charcoal/70">
+                              <Icons.Walk /> 11m walk
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Personalization Reason Footnote */}
+                        <div className="mt-3.5 pt-3 border-t border-charcoal/10 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 text-xs text-teal font-medium">
+                            <Icons.Sparkle />
+                            <span>"Chosen for your love of history and local culture."</span>
+                          </div>
+                          <span className="text-[11px] px-2 py-0.5 rounded bg-gold/50 text-charcoal font-medium shrink-0">
+                            Relaxed pace
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Interactive Hero Photography Switcher Pill Bar */}
+                    <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2 px-1">
+                      <span className="text-xs text-charcoal/65 inline-flex items-center gap-1.5">
+                        <Icons.Camera />
+                        <span>Istanbul atmosphere:</span>
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {HERO_SCENES.map((scene, idx) => (
+                          <button
+                            key={scene.id}
+                            type="button"
+                            onClick={() => setHeroSceneIndex(idx)}
+                            className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                              heroSceneIndex === idx
+                                ? "bg-teal text-ivory shadow-sm"
+                                : "bg-sand/70 text-charcoal/75 hover:bg-sand"
+                            }`}
+                          >
+                            {scene.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                  </div>
+
+                </div>
+              </div>
+            </section>
+
+            {/* ==========================================
+                3. INTERACTIVE PRODUCT PREVIEW
+            ========================================== */}
+            <section id="interactive-planner" className="py-20 lg:py-28 bg-sand/60 border-y border-charcoal/10 scroll-mt-20">
+              <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
+                
+                <div className="max-w-2xl mb-12">
+                  <span className="text-xs font-semibold uppercase tracking-widest text-teal block mb-2">
+                    INTERACTIVE PRODUCT PREVIEW
+                  </span>
+                  <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-charcoal">
+                    Your trip starts with{" "}
+                    <span className="serif-italic font-normal text-teal">what you love.</span>
+                  </h2>
+                  <p className="mt-4 text-base sm:text-lg text-charcoal/80 leading-relaxed">
+                    A few thoughtful choices help Orenda shape a journey around your interests, pace, and travel style.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+                  
+                  {/* Left Controls Panel */}
+                  <div className="lg:col-span-7 bg-ivory rounded-3xl p-6 sm:p-8 shadow-editorial border border-charcoal/10 space-y-7">
+                    
+                    {/* 1. Destination */}
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-charcoal/70 mb-3">
+                        1. Choose your initial Turkey destination
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        {["Istanbul", "Cappadocia", "Antalya", "Explore Turkey"].map((dest) => {
+                          const active = selectedDestination === dest;
+                          return (
+                            <button
+                              key={dest}
+                              type="button"
+                              onClick={() => setSelectedDestination(dest)}
+                              className={`px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all text-left flex items-center justify-between border ${
+                                active
+                                  ? "bg-teal text-ivory border-teal shadow-sm"
+                                  : "bg-sand/50 text-charcoal border-charcoal/10 hover:bg-sand"
+                              }`}
+                            >
+                              <span>{dest}</span>
+                              {active && <span className="w-1.5 h-1.5 rounded-full bg-gold"></span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* 2. Travel Style (Multi-select) */}
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-charcoal/70">
+                          2. Travel Style & Interests (Select multiple)
+                        </label>
+                        <span className="text-xs text-teal font-medium">{selectedStyles.length} selected</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          "Culture & history",
+                          "Food & local experiences",
+                          "Nature & adventure",
+                          "Relaxation",
+                          "Hidden gems",
+                          "Shopping",
+                          "Nightlife"
+                        ].map((style) => {
+                          const active = selectedStyles.includes(style);
+                          return (
+                            <button
+                              key={style}
+                              type="button"
+                              onClick={() => toggleStyle(style)}
+                              className={`px-3.5 py-2 rounded-full text-xs sm:text-sm font-medium transition-all border ${
+                                active
+                                  ? "bg-charcoal text-ivory border-charcoal"
+                                  : "bg-ivory text-charcoal/80 border-charcoal/15 hover:border-charcoal/40"
+                              }`}
+                            >
+                              {active ? `✓ ${style}` : style}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* 3. Pace & 4. Budget & 5. Trip Type */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 pt-2 border-t border-charcoal/10">
+                      <div>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-charcoal/70 mb-2.5">
+                          Travel Pace
+                        </label>
+                        <div className="space-y-1.5">
+                          {["Relaxed", "Balanced", "Packed with experiences"].map((pace) => (
+                            <button
+                              key={pace}
+                              type="button"
+                              onClick={() => setSelectedPace(pace)}
+                              className={`w-full px-3 py-2 rounded-lg text-xs font-medium text-left transition-colors border ${
+                                selectedPace === pace
+                                  ? "bg-teal/10 border-teal text-teal font-semibold"
+                                  : "bg-sand/30 border-transparent text-charcoal/80 hover:bg-sand/60"
+                              }`}
+                            >
+                              {pace}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-charcoal/70 mb-2.5">
+                          Travel Budget
+                        </label>
+                        <div className="space-y-1.5">
+                          {["Budget-friendly", "Comfortable", "Premium"].map((budget) => (
+                            <button
+                              key={budget}
+                              type="button"
+                              onClick={() => setSelectedBudget(budget)}
+                              className={`w-full px-3 py-2 rounded-lg text-xs font-medium text-left transition-colors border ${
+                                selectedBudget === budget
+                                  ? "bg-teal/10 border-teal text-teal font-semibold"
+                                  : "bg-sand/30 border-transparent text-charcoal/80 hover:bg-sand/60"
+                              }`}
+                            >
+                              {budget}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-charcoal/70 mb-2.5">
+                          Trip Type
+                        </label>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {["Solo", "Couple", "Family", "Friends"].map((type) => (
+                            <button
+                              key={type}
+                              type="button"
+                              onClick={() => setSelectedTripType(type)}
+                              className={`px-3 py-2 rounded-lg text-xs font-medium text-center transition-colors border ${
+                                selectedTripType === type
+                                  ? "bg-teal/10 border-teal text-teal font-semibold"
+                                  : "bg-sand/30 border-transparent text-charcoal/80 hover:bg-sand/60"
+                              }`}
+                            >
+                              {type}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-charcoal/10">
+                      <p className="text-xs text-charcoal/65">
+                        Interactive front-end preview using curated sample data for Turkey.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPlanGeneratedBanner(true);
+                          openEarlyAccess(selectedDestination);
+                        }}
+                        className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-teal text-ivory text-sm font-medium hover:bg-teal-dark transition-all shadow-sm shrink-0"
+                      >
+                        <span>Create my itinerary</span>
+                        <Icons.ArrowRight />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Right Live Preview Output Card with Thumbnail Imagery */}
+                  <div className="lg:col-span-5 bg-ivory rounded-3xl p-6 sm:p-8 shadow-editorial border border-charcoal/10">
+                    <div className="flex items-center justify-between gap-2 pb-4 border-b border-charcoal/10">
+                      <div>
+                        <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-teal">
+                          <span className="w-2 h-2 rounded-full bg-teal animate-pulse"></span>
+                          <span>Sample Itinerary Preview • Demo</span>
+                        </div>
+                        <h3 className="text-xl font-semibold text-charcoal mt-1">
+                          {selectedDestination}: {selectedTripType} Journey
+                        </h3>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full bg-sand text-xs font-medium text-charcoal">
+                        {selectedPace}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5 my-4">
+                      <span className="px-2.5 py-0.5 rounded-md bg-gold/40 text-charcoal text-xs font-medium">
+                        {selectedBudget}
+                      </span>
+                      {selectedStyles.slice(0, 3).map((st) => (
+                        <span key={st} className="px-2.5 py-0.5 rounded-md bg-sand text-charcoal/80 text-xs">
+                          {st}
+                        </span>
+                      ))}
+                      {selectedStyles.length > 3 && (
+                        <span className="px-2 py-0.5 rounded-md bg-sand text-charcoal/70 text-xs">
+                          +{selectedStyles.length - 3} more
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Dynamically Filtered Sample Stops with Photography */}
+                    <div className="space-y-3.5 mt-4">
+                      {filteredItinerary.map((item) => (
+                        <div
+                          key={item.title}
+                          className="p-3.5 rounded-2xl bg-sand/40 border border-charcoal/10 hover:border-teal/40 transition-all flex gap-3.5 items-start"
+                        >
+                          <SmartImage
+                            src={item.image}
+                            alt={item.title}
+                            className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover shrink-0 border border-charcoal/10"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center justify-between gap-1 text-[11px] text-teal font-semibold mb-0.5">
+                              <span>{item.time} • {item.category}</span>
+                              <span className="text-charcoal/60 font-normal">{item.duration}</span>
+                            </div>
+                            <h4 className="text-sm font-semibold text-charcoal leading-snug">
+                              {item.title}
+                            </h4>
+                            <p className="text-xs text-charcoal/75 mt-1 flex items-start gap-1.5 leading-relaxed">
+                              <Icons.Sparkle />
+                              <span>{item.reason}</span>
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {planGeneratedBanner && (
+                      <div className="mt-4 p-3 rounded-xl bg-teal/10 border border-teal/20 text-xs text-teal font-medium">
+                        Preview updated for {selectedDestination} ({selectedPace.toLowerCase()} pace).
+                      </div>
+                    )}
+
+                    <div className="mt-6 pt-4 border-t border-charcoal/10 flex items-center justify-between">
+                      <span className="text-xs text-charcoal/60">
+                        Demonstration data • No live booking required
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => openEarlyAccess(selectedDestination)}
+                        className="text-xs font-semibold text-teal hover:underline inline-flex items-center gap-1"
+                      >
+                        <span>Save preferences</span>
+                        <Icons.ArrowRight />
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </section>
+
+            {/* ==========================================
+                4. HOW ORENDA WORKS
+            ========================================== */}
+            <section id="how-it-works" className="py-20 lg:py-28 bg-ivory scroll-mt-20">
+              <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
+                
+                <div className="max-w-2xl mb-16">
+                  <span className="text-xs font-semibold uppercase tracking-widest text-teal block mb-2">
+                    HOW ORENDA WORKS
+                  </span>
+                  <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-charcoal leading-tight">
+                    Less planning.{" "}
+                    <span className="serif-italic font-normal text-teal block sm:inline">
+                      More meaningful moments.
+                    </span>
+                  </h2>
+                  <p className="mt-4 text-base sm:text-lg text-charcoal/80">
+                    Travel planning should feel exciting, not exhausting.
+                  </p>
+                </div>
+
+                <div className="space-y-16 lg:space-y-24">
+                  
+                  {/* STEP 1 */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+                    <div className="lg:col-span-5 space-y-4">
+                      <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-sand text-teal font-semibold text-sm border border-charcoal/10">
+                        01
+                      </span>
+                      <h3 className="text-2xl sm:text-3xl font-semibold text-charcoal">
+                        Tell us what you love
+                      </h3>
+                      <p className="text-base text-charcoal/80 leading-relaxed">
+                        Share your interests, travel style, budget, and the experiences you want from your trip. No rigid questionnaires—just natural choices that reflect how you actually enjoy exploring.
+                      </p>
+                    </div>
+                    <div className="lg:col-span-7 bg-sand/50 rounded-3xl p-6 sm:p-8 border border-charcoal/10">
+                      <div className="bg-ivory rounded-2xl p-5 shadow-editorial border border-charcoal/10 max-w-lg mx-auto">
+                        <div className="text-xs font-semibold uppercase tracking-wider text-charcoal/60 mb-3">
+                          Traveler Taste Profile
+                        </div>
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          <span className="px-3 py-1.5 rounded-full bg-teal text-ivory text-xs font-medium">✓ Architectural history</span>
+                          <span className="px-3 py-1.5 rounded-full bg-teal text-ivory text-xs font-medium">✓ Neighborhood cafés</span>
+                          <span className="px-3 py-1.5 rounded-full bg-sand text-charcoal text-xs font-medium">Coastal walks</span>
+                          <span className="px-3 py-1.5 rounded-full bg-teal text-ivory text-xs font-medium">✓ Regional street food</span>
+                          <span className="px-3 py-1.5 rounded-full bg-sand text-charcoal/60 text-xs">Late-night clubs</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs pt-3 border-t border-charcoal/10 text-charcoal/75">
+                          <span>Preferred rhythm: <strong>Unhurried mornings</strong></span>
+                          <span className="text-teal font-medium">Walking comfort: Moderate</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* STEP 2 */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+                    <div className="lg:col-span-7 lg:order-1 order-2 bg-sand/50 rounded-3xl p-6 sm:p-8 border border-charcoal/10">
+                      <div className="bg-ivory rounded-2xl p-5 shadow-editorial border border-charcoal/10 max-w-lg mx-auto space-y-3">
+                        <div className="flex items-center justify-between border-b border-charcoal/10 pb-3">
+                          <span className="text-xs font-semibold text-teal uppercase tracking-wider">Smart Route Grouping • Karaköy to Galata</span>
+                          <span className="inline-flex items-center gap-1 text-xs text-charcoal/70"><Icons.Sun /> 21°C Clear</span>
+                        </div>
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-sand/40">
+                          <SmartImage
+                            src="https://images.unsplash.com/photo-1527838832700-5059252407fa?auto=format&fit=crop&w=200&q=80"
+                            alt="Waterfront Art Museum"
+                            className="w-12 h-12 rounded-lg object-cover shrink-0"
+                          />
+                          <div className="text-xs font-bold text-teal w-10">10:30</div>
+                          <div className="flex-1">
+                            <div className="text-sm font-semibold text-charcoal">Waterfront Art Museum</div>
+                            <div className="text-xs text-charcoal/65">90 min • Morning light by the strait</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 pl-6 text-xs text-teal font-medium">
+                          <Icons.Walk />
+                          <span>9 min scenic uphill walk via Kamondo Stairs</span>
+                        </div>
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-sand/40">
+                          <SmartImage
+                            src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=200&q=80"
+                            alt="Artisan Lunch near Galata"
+                            className="w-12 h-12 rounded-lg object-cover shrink-0"
+                          />
+                          <div className="text-xs font-bold text-teal w-10">12:15</div>
+                          <div className="flex-1">
+                            <div className="text-sm font-semibold text-charcoal">Artisan Lunch near Galata</div>
+                            <div className="text-xs text-charcoal/65">Table timing aligned with walking route</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="lg:col-span-5 lg:order-2 order-1 space-y-4">
+                      <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-sand text-teal font-semibold text-sm border border-charcoal/10">
+                        02
+                      </span>
+                      <h3 className="text-2xl sm:text-3xl font-semibold text-charcoal">
+                        Get a plan that fits
+                      </h3>
+                      <p className="text-base text-charcoal/80 leading-relaxed">
+                        Orenda combines destination information, travel times, weather, and your preferences to build a thoughtful itinerary—grouping nearby stops so you spend your day experiencing places, not sitting in transit.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* STEP 3 */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+                    <div className="lg:col-span-5 space-y-4">
+                      <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-sand text-teal font-semibold text-sm border border-charcoal/10">
+                        03
+                      </span>
+                      <h3 className="text-2xl sm:text-3xl font-semibold text-charcoal">
+                        Make it your own
+                      </h3>
+                      <p className="text-base text-charcoal/80 leading-relaxed">
+                        Like a recommendation, replace an activity, or tell Orenda what isn't working. Your feedback helps shape a better plan immediately.
+                      </p>
+                    </div>
+                    <div className="lg:col-span-7 bg-sand/50 rounded-3xl p-6 sm:p-8 border border-charcoal/10">
+                      <div className="bg-ivory rounded-2xl p-5 shadow-editorial border border-charcoal/10 max-w-lg mx-auto">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-semibold text-teal">15:30 • AFTERNOON STOP</span>
+                          <span className="text-[11px] px-2 py-0.5 rounded bg-sand text-charcoal/70">Interactive Card</span>
+                        </div>
+                        <h4 className="text-base font-semibold text-charcoal">
+                          {step3Action === "replaced"
+                            ? "Quiet Rooftop Bookshop & Tea Terrace"
+                            : "Grand Spice Bazaar Main Arcade"}
+                        </h4>
+                        <p className="text-xs text-charcoal/75 mt-1">
+                          {step3Action === "replaced"
+                            ? "Swapped for a calmer cultural stop 6 minutes away with panoramic views."
+                            : step3Action === "liked"
+                            ? "Saved! We'll prioritize historic covered markets in your itinerary."
+                            : "Historic 17th-century spice market with aromatic stalls and local delicacies."}
+                        </p>
+                        <div className="flex items-center gap-2 mt-4 pt-3 border-t border-charcoal/10">
+                          <button
+                            type="button"
+                            onClick={() => setStep3Action("liked")}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                              step3Action === "liked"
+                                ? "bg-teal text-ivory"
+                                : "bg-sand/70 text-charcoal hover:bg-sand"
+                            }`}
+                          >
+                            <Icons.Heart filled={step3Action === "liked"} />
+                            <span>Like</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setStep3Action(step3Action === "replaced" ? "default" : "replaced")}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                              step3Action === "replaced"
+                                ? "bg-terracotta text-ivory"
+                                : "bg-sand/70 text-charcoal hover:bg-sand"
+                            }`}
+                          >
+                            <Icons.Refresh />
+                            <span>{step3Action === "replaced" ? "Restore original" : "Replace"}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setStep3Action("default")}
+                            className="ml-auto text-xs text-charcoal/60 hover:text-charcoal px-2 py-1"
+                          >
+                            Skip stop
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </section>
+
+            {/* ==========================================
+                5. PERSONALIZED TRAVEL PLANNING
+            ========================================== */}
+            <section id="features" className="py-20 lg:py-28 bg-sand/50 border-t border-charcoal/10 scroll-mt-20">
+              <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
+                
+                <div className="max-w-2xl mb-14">
+                  <span className="text-xs font-semibold uppercase tracking-widest text-teal block mb-2">
+                    THOUGHTFUL FULL-DAY COHERENCE
+                  </span>
+                  <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-charcoal">
+                    Not another{" "}
+                    <span className="serif-italic font-normal text-teal">generic itinerary.</span>
+                  </h2>
+                  <p className="mt-4 text-base sm:text-lg text-charcoal/80">
+                    Your travel style is unique. Your itinerary should be too. Orenda considers walking distances, energy levels, and transitions across your entire day.
+                  </p>
+                </div>
+
+                <div className="bg-ivory rounded-3xl shadow-editorial border border-charcoal/10 overflow-hidden">
+                  
+                  <div className="bg-charcoal text-ivory px-6 py-5 sm:px-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 text-xs text-gold font-medium uppercase tracking-wider">
+                        <span>Istanbul, Turkey</span>
+                        <span>•</span>
+                        <span>Sample Demonstration Itinerary</span>
+                      </div>
+                      <h3 className="text-xl sm:text-2xl font-semibold mt-1">
+                        DAY 1 — HISTORY, FLAVORS & DISCOVERY
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs bg-ivory/10 px-4 py-2 rounded-full self-start sm:self-auto">
+                      <Icons.Sun />
+                      <span>21°C Ideal Walking Weather</span>
+                      <span className="text-ivory/40">|</span>
+                      <span>5 Curated Stops</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-12">
+                    
+                    <div className="lg:col-span-7 p-6 sm:p-8 divide-y divide-charcoal/10">
+                      {day1Schedule.map((stop, index) => {
+                        const isSelected = selectedStopIndex === index;
+                        return (
+                          <div
+                            key={stop.time}
+                            onClick={() => setSelectedStopIndex(index)}
+                            className={`py-5 first:pt-0 last:pb-0 cursor-pointer transition-all rounded-2xl px-4 -mx-4 ${
+                              isSelected ? "bg-sand/70" : "hover:bg-sand/30"
+                            }`}
+                          >
+                            <div className="flex gap-4 items-start">
+                              <SmartImage
+                                src={stop.image}
+                                alt={stop.title}
+                                className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover shrink-0 border border-charcoal/10 mt-1"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                                  <div className="flex items-center gap-2.5">
+                                    <span className="px-2.5 py-0.5 rounded-lg bg-teal text-ivory text-xs font-semibold tabular-nums">
+                                      {stop.time}
+                                    </span>
+                                    <span className="text-xs font-semibold uppercase tracking-wider text-teal">
+                                      {stop.category}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-xs text-charcoal/70">
+                                    <span className="inline-flex items-center gap-1">
+                                      <Icons.Clock /> {stop.duration}
+                                    </span>
+                                    <span>•</span>
+                                    <span className="inline-flex items-center gap-1">
+                                      <Icons.Walk /> {stop.walkTime}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <h4 className="text-base sm:text-lg font-semibold text-charcoal mt-1.5">
+                                  {stop.title}
+                                </h4>
+
+                                <div className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-ivory border border-charcoal/10 text-xs text-charcoal/85">
+                                  <Icons.Sparkle />
+                                  <span>"{stop.explanation}"</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="lg:col-span-5 bg-sand/40 border-t lg:border-t-0 lg:border-l border-charcoal/10 p-6 sm:p-8 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-xs font-semibold uppercase tracking-wider text-charcoal/70">
+                            Day 1 Route Coherence
+                          </span>
+                          <span className="text-xs text-teal font-medium">
+                            Click any stop to inspect
+                          </span>
+                        </div>
+
+                        <div className="relative rounded-2xl overflow-hidden bg-[#E6E0D3] border border-charcoal/10 aspect-[4/3.2] p-4 shadow-inner">
+                          <svg className="w-full h-full" viewBox="0 0 100 75" fill="none" aria-label="Illustrated route map of Istanbul Day 1">
+                            <path d="M0 15 Q 45 25, 65 10 T 100 5 L 100 0 L 0 0 Z" fill="#C9D8D2" />
+                            <path d="M65 75 Q 72 45, 92 18 L 100 18 L 100 75 Z" fill="#C9D8D2" />
+                            <path d="M10 70 L 85 20 M20 30 L 70 65 M15 50 L 90 40" stroke="#FAF8F3" strokeWidth="0.8" opacity="0.7" />
+                            
+                            <polyline
+                              points="28,54 42,41 55,36 68,27 82,19"
+                              fill="none"
+                              stroke="#24594B"
+                              strokeWidth="1.6"
+                              strokeDasharray="2.5 2"
+                            />
+
+                            {day1Schedule.map((st, idx) => {
+                              const active = idx === selectedStopIndex;
+                              const yMapped = st.coords.y * 0.78;
+                              return (
+                                <g
+                                  key={st.time}
+                                  className="cursor-pointer"
+                                  onClick={() => setSelectedStopIndex(idx)}
+                                >
+                                  {active && (
+                                    <circle cx={st.coords.x} cy={yMapped} r="6.5" fill="#D58A68" opacity="0.35" />
+                                  )}
+                                  <circle
+                                    cx={st.coords.x}
+                                    cy={yMapped}
+                                    r={active ? "3.8" : "2.8"}
+                                    fill={active ? "#D58A68" : "#24594B"}
+                                    stroke="#FAF8F3"
+                                    strokeWidth="1"
+                                  />
+                                  <text
+                                    x={st.coords.x}
+                                    y={yMapped - 5}
+                                    textAnchor="middle"
+                                    fontSize="3.6"
+                                    fontWeight="bold"
+                                    fill="#23352F"
+                                  >
+                                    {st.time}
+                                  </text>
+                                </g>
+                              );
+                            })}
+                          </svg>
+
+                          <div className="absolute bottom-3 left-3 right-3 bg-ivory/95 backdrop-blur-sm rounded-xl p-3 border border-charcoal/10 text-xs flex items-center gap-3">
+                            <SmartImage
+                              src={day1Schedule[selectedStopIndex].image}
+                              alt={day1Schedule[selectedStopIndex].title}
+                              className="w-12 h-12 rounded-lg object-cover shrink-0"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="font-semibold text-teal">
+                                Selected Stop ({day1Schedule[selectedStopIndex].time})
+                              </div>
+                              <div className="font-medium text-charcoal truncate">
+                                {day1Schedule[selectedStopIndex].title}
+                              </div>
+                              <div className="text-charcoal/70 mt-0.5 flex items-center justify-between">
+                                <span>{day1Schedule[selectedStopIndex].walkTime}</span>
+                                <span>{day1Schedule[selectedStopIndex].weather}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 bg-ivory rounded-2xl p-5 border border-charcoal/10 space-y-3">
+                        <div className="text-xs font-semibold uppercase tracking-wider text-teal">
+                          Why this day feels effortless
+                        </div>
+                        <ul className="space-y-2 text-xs sm:text-sm text-charcoal/80">
+                          <li className="flex items-start gap-2">
+                            <span className="text-teal mt-0.5"><Icons.Check /></span>
+                            <span><strong>No zig-zagging across the city:</strong> Each stop flows naturally toward the waterfront.</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="text-teal mt-0.5"><Icons.Check /></span>
+                            <span><strong>Paced around energy:</strong> Deeper historical exploration in the morning, scenic relaxation by late afternoon.</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* ==========================================
+                6. ADAPTIVE PLANNING & IMMEDIATE FEEDBACK
+            ========================================== */}
+            <section className="py-20 lg:py-28 bg-ivory border-t border-charcoal/10">
+              <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
+                
+                <div className="max-w-2xl mb-12">
+                  <span className="text-xs font-semibold uppercase tracking-widest text-terracotta block mb-2">
+                    ADAPTIVE PLANNING & IMMEDIATE FEEDBACK
+                  </span>
+                  <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-charcoal">
+                    Your plans can change.{" "}
+                    <span className="serif-italic font-normal text-teal block sm:inline">
+                      Your itinerary should too.
+                    </span>
+                  </h2>
+                  <p className="mt-4 text-base sm:text-lg text-charcoal/80">
+                    Discover something new, change your mind, or take the day at a different pace. Orenda doesn't just recommend—it listens and adapts.
+                  </p>
+                </div>
+
+                <div className="mb-8">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-charcoal/70 mb-3">
+                    Try giving feedback on the 11:00 recommendation below:
+                  </div>
+                  <div className="flex flex-wrap gap-2.5" role="group" aria-label="Sample itinerary feedback controls">
+                    {[
+                      "Too crowded",
+                      "Too far",
+                      "Too expensive",
+                      "Not for me",
+                      "Find something similar",
+                      "Love it"
+                    ].map((feedback) => {
+                      const active = activeFeedback === feedback;
+                      return (
+                        <button
+                          key={feedback}
+                          type="button"
+                          onClick={() => setActiveFeedback(feedback)}
+                          className={`px-4 py-2.5 rounded-full text-xs sm:text-sm font-medium transition-all border ${
+                            active
+                              ? "bg-teal text-ivory border-teal shadow-sm"
+                              : "bg-sand/60 text-charcoal border-charcoal/10 hover:bg-sand"
+                          }`}
+                        >
+                          {feedback}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
+                  
+                  {/* BEFORE CARD */}
+                  <div className="lg:col-span-5 bg-sand/50 rounded-3xl p-6 sm:p-8 border border-charcoal/10 flex flex-col justify-between relative">
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-4">
+                        <span className="px-3 py-1 rounded-full bg-charcoal/10 text-charcoal text-xs font-semibold uppercase tracking-wider">
+                          Before • Original Suggestion
+                        </span>
+                        <span className="text-xs font-medium text-charcoal/60">11:00 — 13:00</span>
+                      </div>
+
+                      <h3 className="text-xl font-semibold text-charcoal">
+                        Popular Historical Attraction & Main Courtyard
+                      </h3>
+                      <p className="text-sm text-charcoal/75 mt-2 leading-relaxed">
+                        A world-famous monument in the center of the Old City. High mid-morning visitor volume and longer entry queues.
+                      </p>
+                    </div>
+
+                    <div className="mt-6 pt-4 border-t border-charcoal/10 space-y-2">
+                      <div className="text-xs text-charcoal/65">Your selected feedback:</div>
+                      <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-terracotta/15 border border-terracotta/30 text-charcoal text-xs sm:text-sm font-semibold">
+                        <span className="w-2 h-2 rounded-full bg-terracotta"></span>
+                        <span>Traveler feedback: "{activeFeedback}"</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Center Transformation Indicator */}
+                  <div className="lg:col-span-1 flex items-center justify-center">
+                    <div className="w-11 h-11 rounded-full bg-teal text-ivory flex items-center justify-center shadow-sm rotate-90 lg:rotate-0">
+                      <Icons.ArrowRight />
+                    </div>
+                  </div>
+
+                  {/* AFTER CARD WITH PHOTOGRAPHY */}
+                  <div className="lg:col-span-6 bg-ivory rounded-3xl p-6 sm:p-8 shadow-editorial border-2 border-teal flex flex-col justify-between transition-all duration-300">
+                    <div>
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                        <span className="px-3 py-1 rounded-full bg-teal text-ivory text-xs font-semibold uppercase tracking-wider">
+                          After • {ADAPTIVE_STATES[activeFeedback].badge}
+                        </span>
+                        <span className="text-xs font-semibold text-teal">
+                          {ADAPTIVE_STATES[activeFeedback].time}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                        <SmartImage
+                          src={ADAPTIVE_STATES[activeFeedback].image}
+                          alt={ADAPTIVE_STATES[activeFeedback].title}
+                          className="w-full sm:w-28 h-36 sm:h-24 rounded-2xl object-cover shrink-0 border border-charcoal/10"
+                        />
+                        <div>
+                          <h3 className="text-xl sm:text-2xl font-semibold text-charcoal">
+                            {ADAPTIVE_STATES[activeFeedback].title}
+                          </h3>
+                          <div className="flex flex-wrap gap-2 mt-3">
+                            <span className="px-2.5 py-1 rounded-lg bg-sand text-xs font-medium text-charcoal">
+                              {ADAPTIVE_STATES[activeFeedback].distance}
+                            </span>
+                            <span className="px-2.5 py-1 rounded-lg bg-sand text-xs font-medium text-charcoal">
+                              {ADAPTIVE_STATES[activeFeedback].cost}
+                            </span>
+                            <span className="px-2.5 py-1 rounded-lg bg-gold/40 text-xs font-medium text-charcoal">
+                              {ADAPTIVE_STATES[activeFeedback].crowd}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 p-4 rounded-2xl bg-teal/5 border border-teal/20">
+                      <div className="flex items-start gap-2.5">
+                        <div className="mt-0.5"><Icons.Sparkle /></div>
+                        <div>
+                          <div className="text-xs font-semibold uppercase tracking-wider text-teal">
+                            Why Orenda chose this replacement
+                          </div>
+                          <p className="text-sm text-charcoal mt-1 leading-relaxed">
+                            "{ADAPTIVE_STATES[activeFeedback].explanation}"
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                <p className="text-xs text-charcoal/60 mt-4">
+                  Interactive front-end demonstration illustrating how Orenda adapts itineraries to user feedback.
+                </p>
+              </div>
+            </section>
+
+            {/* ==========================================
+                7. DESTINATION INSPIRATION ("WHERE WILL YOUR CURIOSITY TAKE YOU?")
+            ========================================== */}
+            <section id="explore" className="py-20 lg:py-28 bg-sand/50 border-t border-charcoal/10 scroll-mt-20">
+              <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
+                
+                <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+                  <div className="max-w-xl">
+                    <span className="text-xs font-semibold uppercase tracking-widest text-teal block mb-2">
+                      INITIAL DESTINATION FOCUS • TURKEY
+                    </span>
+                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-charcoal">
+                      Where will your{" "}
+                      <span className="serif-italic font-normal text-teal">curiosity take you?</span>
+                    </h2>
+                    <p className="mt-4 text-base sm:text-lg text-charcoal/80">
+                      Start with a destination. Discover the experiences that make it yours.
+                    </p>
+                  </div>
+                  <p className="text-xs sm:text-sm text-charcoal/70 max-w-xs">
+                    Click any destination card to load tailored sample preferences in the interactive trip planner, or toggle between editorial views.
+                  </p>
+                </div>
+
+                {/* Editorial Asymmetric 4-Panel Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-7">
+                  
+                  {DESTINATIONS.map((dest, idx) => {
+                    const colSpan = idx === 0 || idx === 3 ? "md:col-span-7" : "md:col-span-5";
+                    const minHeight = idx < 2 ? "min-h-[410px] sm:min-h-[460px]" : "min-h-[390px] sm:min-h-[430px]";
+                    const showAlt = !!altPhotoMap[dest.id];
+                    const activePhoto = showAlt ? dest.secondaryImage : dest.image;
+
+                    return (
+                      <div
+                        key={dest.id}
+                        onClick={() => handleSelectDestinationInspiration(dest.name, dest.defaultStyles)}
+                        className={`${colSpan} ${minHeight} group relative rounded-3xl overflow-hidden cursor-pointer shadow-editorial border border-charcoal/10 flex flex-col justify-between p-6 sm:p-8`}
+                      >
+                        <SmartImage
+                          src={activePhoto}
+                          alt={`${dest.name} — ${dest.tagline}`}
+                          loading="lazy"
+                          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-charcoal/90 via-charcoal/30 to-charcoal/15" />
+
+                        {/* Top Bar: Weather + Secondary Vignette + View Switcher */}
+                        <div className="relative z-10 flex items-start justify-between gap-2">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-ivory/90 backdrop-blur-md text-charcoal text-xs font-medium shadow-sm">
+                            <Icons.Sun />
+                            <span>{dest.weather}</span>
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={(e) => toggleDestPhoto(e, dest.id)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-charcoal/65 hover:bg-charcoal/85 text-ivory backdrop-blur-md text-xs font-medium transition-colors border border-ivory/20"
+                            title="Switch editorial photograph"
+                          >
+                            <Icons.Camera />
+                            <span>{showAlt ? "View 2/2" : "View 1/2"}</span>
+                          </button>
+                        </div>
+
+                        {/* Bottom Content + Secondary Thumbnail Vignette */}
+                        <div className="relative z-10 text-ivory mt-auto pt-12">
+                          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                            <div>
+                              <span className="inline-block px-3 py-1 rounded-full bg-ivory/20 backdrop-blur-md text-xs font-medium mb-3">
+                                {dest.contextLabel}
+                              </span>
+                              <h3 className="text-2xl sm:text-3xl font-semibold leading-snug">
+                                {dest.name} —{" "}
+                                <span className="serif-italic font-normal text-gold">
+                                  {dest.tagline}
+                                </span>
+                              </h3>
+                            </div>
+
+                            {/* Small Editorial Inset Thumbnail */}
+                            <div className="hidden sm:flex items-center gap-2.5 bg-charcoal/65 backdrop-blur-md p-1.5 pr-3 rounded-2xl border border-ivory/15 shrink-0">
+                              <SmartImage
+                                src={dest.vignetteImage}
+                                alt={dest.vignetteLabel}
+                                className="w-10 h-10 rounded-xl object-cover"
+                              />
+                              <span className="text-[11px] text-ivory/90 max-w-[115px] leading-tight">
+                                {dest.vignetteLabel}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-ivory/20">
+                            <div className="flex flex-wrap gap-1.5">
+                              {dest.themes.map((t) => (
+                                <span key={t} className="text-xs text-ivory/90 bg-charcoal/45 px-2.5 py-1 rounded-md">
+                                  {t}
+                                </span>
+                              ))}
+                            </div>
+                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-gold group-hover:translate-x-1 transition-transform">
+                              <span>Explore in planner</span>
+                              <Icons.ArrowRight />
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                </div>
+              </div>
+            </section>
+
+            {/* ==========================================
+                8. TRAVEL COMPANION VISION (SECTIONS 15 & 16)
+            ========================================== */}
+            <section id="our-vision" className="py-20 lg:py-28 bg-ivory border-t border-charcoal/10 scroll-mt-20">
+              <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 space-y-24">
+                
+                {/* PART A: THE PERSONAL TRAVEL COMPANION */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                  
+                  <div className="lg:col-span-6 space-y-6">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/40 text-charcoal text-xs font-semibold uppercase tracking-wider">
+                      <span>Product Vision • Upcoming Companion Experience</span>
+                    </div>
+
+                    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-charcoal leading-tight">
+                      Great travel plans leave room for{" "}
+                      <span className="serif-italic font-normal text-teal">real life.</span>
+                    </h2>
+
+                    <p className="text-base sm:text-lg text-charcoal/80 leading-relaxed">
+                      Sometimes the best moment is the one you didn't plan. Our longer-term vision for Orenda is an intelligent companion that adapts as your journey unfolds—helping you pivot when weather shifts or when you find two free hours before dinner.
+                    </p>
+
+                    <div className="space-y-3 pt-2">
+                      <div className="text-xs font-semibold uppercase tracking-wider text-charcoal/60">
+                        Explore Vision Scenarios:
+                      </div>
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCompanionScenario("rain");
+                            setCompanionResolution(null);
+                          }}
+                          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all border ${
+                            companionScenario === "rain"
+                              ? "bg-teal text-ivory border-teal shadow-sm"
+                              : "bg-sand/60 text-charcoal border-charcoal/10 hover:bg-sand"
+                          }`}
+                        >
+                          Scenario 1: Afternoon Rain & Walking Fatigue
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCompanionScenario("free-time");
+                            setCompanionResolution(null);
+                          }}
+                          className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all border ${
+                            companionScenario === "free-time"
+                              ? "bg-teal text-ivory border-teal shadow-sm"
+                              : "bg-sand/60 text-charcoal border-charcoal/10 hover:bg-sand"
+                          }`}
+                        >
+                          Scenario 2: Two Free Hours Before Dinner
+                        </button>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-charcoal/60 leading-relaxed pt-2">
+                      Note: Context-aware live travel assistance is presented as part of Orenda's product roadmap and vision, not as active GPS or real-time venue tracking today.
+                    </p>
+                  </div>
+
+                  {/* Mobile Companion Mockup layered over Atmospheric Istanbul Photography */}
+                  <div className="lg:col-span-6 relative flex justify-center">
+                    <div className="hidden sm:block absolute -inset-4 rounded-3xl overflow-hidden opacity-25 pointer-events-none">
+                      <SmartImage
+                        src="https://images.unsplash.com/photo-1527838832700-5059252407fa?auto=format&fit=crop&w=1000&q=80"
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="relative w-full max-w-md bg-charcoal rounded-[2.5rem] p-3.5 shadow-floating border-4 border-charcoal/90">
+                      <div className="bg-ivory rounded-[2rem] overflow-hidden">
+                        <div className="bg-sand px-6 py-4 flex items-center justify-between border-b border-charcoal/10">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-terracotta"></span>
+                            <span className="text-xs font-semibold text-charcoal">orenda companion • vision mockup</span>
+                          </div>
+                          <span className="text-xs text-charcoal/60">15:45 • Istanbul</span>
+                        </div>
+
+                        <div className="p-6 space-y-5">
+                          {companionScenario === "rain" ? (
+                            <>
+                              <div className="flex flex-wrap gap-2">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal/10 text-teal text-xs font-medium">
+                                  <Icons.CloudRain /> Rain expected at 16:30
+                                </span>
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sand text-charcoal text-xs font-medium">
+                                  <Icons.Walk /> 6.4 km walked today
+                                </span>
+                              </div>
+
+                              <div className="p-5 rounded-2xl bg-sand/70 border border-charcoal/10 space-y-3">
+                                <div className="flex items-center gap-2 text-xs font-semibold text-teal uppercase tracking-wider">
+                                  <Icons.Sparkle />
+                                  <span>Thoughtful Suggestion</span>
+                                </div>
+                                <p className="text-sm sm:text-base font-medium text-charcoal leading-relaxed">
+                                  "Rain is expected later today. Would you like to visit a nearby indoor attraction and save the waterfront walk for tomorrow?"
+                                </p>
+                                <div className="p-3 rounded-xl bg-ivory border border-charcoal/10 text-xs text-charcoal/80">
+                                  <strong>Proposed swap:</strong> Basilica Cistern & Heated Heritage Café (4 min walk away) • Moves Ortaköy Waterfront Walk to tomorrow morning's sunny window.
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-3">
+                                <button
+                                  type="button"
+                                  onClick={() => setCompanionResolution("updated")}
+                                  className="flex-1 py-3 px-4 rounded-xl bg-teal text-ivory text-xs font-semibold hover:bg-teal-dark transition-colors"
+                                >
+                                  Update my plan
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setCompanionResolution("kept")}
+                                  className="flex-1 py-3 px-4 rounded-xl bg-sand text-charcoal text-xs font-semibold hover:bg-sand/80 transition-colors"
+                                >
+                                  Keep original plan
+                                </button>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="flex flex-wrap gap-2">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold/50 text-charcoal text-xs font-medium">
+                                  <Icons.Clock /> 17:00 – 19:00 Open Window
+                                </span>
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sand text-charcoal text-xs font-medium">
+                                  Near Beyoğlu
+                                </span>
+                              </div>
+
+                              <div className="p-5 rounded-2xl bg-sand/70 border border-charcoal/10 space-y-3">
+                                <div className="flex items-center gap-2 text-xs font-semibold text-teal uppercase tracking-wider">
+                                  <Icons.Sparkle />
+                                  <span>Flexible Window</span>
+                                </div>
+                                <p className="text-sm sm:text-base font-medium text-charcoal leading-relaxed">
+                                  "You have two free hours before dinner. Here are three nearby experiences that match your interests."
+                                </p>
+                                <div className="space-y-2 pt-1">
+                                  <div className="p-2.5 rounded-xl bg-ivory border border-charcoal/10 text-xs flex justify-between items-center">
+                                    <span>1. Salt Galata Architecture Library</span>
+                                    <span className="text-teal font-semibold">5m walk</span>
+                                  </div>
+                                  <div className="p-2.5 rounded-xl bg-ivory border border-charcoal/10 text-xs flex justify-between items-center">
+                                    <span>2. Vintage Print & Map Arcade</span>
+                                    <span className="text-teal font-semibold">3m walk</span>
+                                  </div>
+                                  <div className="p-2.5 rounded-xl bg-ivory border border-charcoal/10 text-xs flex justify-between items-center">
+                                    <span>3. Quiet Garden Turkish Coffee</span>
+                                    <span className="text-teal font-semibold">4m walk</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-3">
+                                <button
+                                  type="button"
+                                  onClick={() => setCompanionResolution("updated")}
+                                  className="flex-1 py-3 px-4 rounded-xl bg-teal text-ivory text-xs font-semibold hover:bg-teal-dark transition-colors"
+                                >
+                                  Add #1 to my evening
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setCompanionResolution("kept")}
+                                  className="flex-1 py-3 px-4 rounded-xl bg-sand text-charcoal text-xs font-semibold hover:bg-sand/80 transition-colors"
+                                >
+                                  Keep unscheduled
+                                </button>
+                              </div>
+                            </>
+                          )}
+
+                          {companionResolution && (
+                            <div className="p-3 rounded-xl bg-teal/10 border border-teal/20 text-xs text-teal font-medium text-center">
+                              {companionResolution === "updated"
+                                ? "Sample schedule gracefully adjusted around your afternoon."
+                                : "Original schedule preserved—enjoy your journey at your own rhythm."}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* PART B: PERSONALIZATION THAT IMPROVES OVER TIME */}
+                <div className="pt-16 border-t border-charcoal/10">
+                  <div className="max-w-2xl mb-12">
+                    <span className="text-xs font-semibold uppercase tracking-widest text-teal block mb-2">
+                      CONTINUOUS PREFERENCE LEARNING
+                    </span>
+                    <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-charcoal">
+                      The more you travel,{" "}
+                      <span className="serif-italic font-normal text-teal">the more personal it feels.</span>
+                    </h2>
+                    <p className="mt-4 text-base sm:text-lg text-charcoal/80">
+                      Your preferences matter. The experiences you love, the places you skip, and the feedback you share can help shape future recommendations.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+                    <div className="bg-sand/50 rounded-3xl p-6 sm:p-7 border border-charcoal/10 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-teal mb-4">
+                          <span>Step 1 • Your Interests</span>
+                          <span className="w-6 h-6 rounded-full bg-ivory flex items-center justify-center text-charcoal">1</span>
+                        </div>
+                        <h3 className="text-lg font-semibold text-charcoal mb-3">
+                          What you consistently enjoy
+                        </h3>
+                        <div className="space-y-2">
+                          {["Historic neighborhoods", "Local cuisine", "Scenic walks"].map((item) => (
+                            <div key={item} className="flex items-center gap-2.5 p-3 rounded-xl bg-ivory border border-charcoal/10 text-sm font-medium text-charcoal">
+                              <span className="text-teal"><Icons.Heart filled={true} /></span>
+                              <span>{item}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-xs text-charcoal/65 mt-5">
+                        Starting signals from your initial trip setup.
+                      </p>
+                    </div>
+
+                    <div className="bg-sand/50 rounded-3xl p-6 sm:p-7 border border-charcoal/10 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-terracotta mb-4">
+                          <span>Step 2 • Your Feedback</span>
+                          <span className="w-6 h-6 rounded-full bg-ivory flex items-center justify-center text-charcoal">2</span>
+                        </div>
+                        <h3 className="text-lg font-semibold text-charcoal mb-3">
+                          What you frequently skip or avoid
+                        </h3>
+                        <div className="space-y-2">
+                          {["Crowded attractions", "Long transfers", "Expensive experiences"].map((item) => (
+                            <div key={item} className="flex items-center justify-between p-3 rounded-xl bg-ivory border border-charcoal/10 text-sm text-charcoal/80">
+                              <span>{item}</span>
+                              <span className="text-[11px] px-2 py-0.5 rounded bg-terracotta/15 text-charcoal font-medium">
+                                Filtered out
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-xs text-charcoal/65 mt-5">
+                        Direct adjustments as you refine stops along the way.
+                      </p>
+                    </div>
+
+                    <div className="bg-ivory rounded-3xl p-6 sm:p-7 shadow-editorial border-2 border-teal flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-teal mb-4">
+                          <span>Step 3 • Better-Matched Plans</span>
+                          <Icons.Sparkle />
+                        </div>
+                        <h3 className="text-lg font-semibold text-charcoal mb-3">
+                          Future days tailored to your rhythm
+                        </h3>
+                        <div className="p-4 rounded-2xl bg-sand/50 border border-charcoal/10 space-y-2">
+                          <span className="text-[11px] font-semibold uppercase tracking-wider text-teal">
+                            Next Morning Preview • Kuzguncuk
+                          </span>
+                          <div className="text-sm font-semibold text-charcoal">
+                            Tree-lined wooden house lanes, market bakery & Bosphorus pier walk
+                          </div>
+                          <p className="text-xs text-charcoal/75 leading-relaxed">
+                            Automatically prioritizes walkable historic character, family-owned food spots, and calm local atmosphere.
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-xs text-teal font-medium mt-5">
+                        Designed to feel more intuitive with every day you plan.
+                      </p>
+                    </div>
+
+                  </div>
+                </div>
+
+              </div>
+            </section>
+
+            {/* ==========================================
+                9. FINAL CALL TO ACTION
+            ========================================== */}
+            <section className="py-20 lg:py-28 px-5 sm:px-8 lg:px-12 bg-ivory">
+              <div className="max-w-7xl mx-auto">
+                <div className="relative rounded-[2.5rem] overflow-hidden bg-teal text-ivory px-6 py-16 sm:px-14 sm:py-20 lg:py-24 shadow-floating">
+                  <SmartImage
+                    src="https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=1600&q=85"
+                    alt=""
+                    loading="lazy"
+                    className="absolute inset-0 w-full h-full object-cover opacity-25 mix-blend-luminosity"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-teal via-teal/95 to-teal-dark/90" />
+
+                  <div className="relative z-10 max-w-2xl space-y-6">
+                    <span className="inline-block px-3.5 py-1.5 rounded-full bg-ivory/15 text-gold text-xs font-semibold uppercase tracking-widest">
+                      Start with Turkey. Discover a new way to travel.
+                    </span>
+
+                    <h2 className="text-3xl sm:text-5xl lg:text-[3.4rem] font-semibold tracking-tight leading-[1.1]">
+                      Your next journey should{" "}
+                      <span className="serif-italic font-normal text-gold">feel like yours.</span>
+                    </h2>
+
+                    <p className="text-base sm:text-lg text-ivory/85 leading-relaxed max-w-xl">
+                      Discover new places, follow your curiosity, and create a trip around the experiences that matter to you.
+                    </p>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-3">
+                      <button
+                        type="button"
+                        onClick={() => openEarlyAccess(selectedDestination)}
+                        className="inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-full bg-ivory text-charcoal text-base font-semibold hover:bg-gold transition-colors shadow-sm"
+                      >
+                        <span>Plan my trip</span>
+                        <Icons.ArrowRight />
+                      </button>
+                      <a
+                        href="#explore"
+                        className="inline-flex items-center justify-center px-8 py-4 rounded-full bg-transparent border border-ivory/35 text-ivory text-base font-medium hover:bg-ivory/10 transition-colors"
+                      >
+                        Explore destinations
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </main>
+
+          {/* ==========================================
+              10. FOOTER
+          ========================================== */}
+          <footer className="bg-sand/70 border-t border-charcoal/10 py-14">
+            <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 pb-10 border-b border-charcoal/10">
+                <div className="space-y-2.5">
+                  <OrendaLogo />
+                  <p className="text-sm text-charcoal/75 max-w-sm">
+                    Thoughtful travel planning, shaped around you.
+                  </p>
+                </div>
+
+                <nav className="flex flex-wrap gap-x-8 gap-y-3 text-sm font-medium text-charcoal/80" aria-label="Footer Navigation">
+                  <a href="#explore" className="hover:text-teal transition-colors">Explore</a>
+                  <a href="#how-it-works" className="hover:text-teal transition-colors">How it works</a>
+                  <a href="#privacy-placeholder" onClick={(e) => { e.preventDefault(); openEarlyAccess(); }} className="hover:text-teal transition-colors">Privacy (Placeholder)</a>
+                  <a href="#terms-placeholder" onClick={(e) => { e.preventDefault(); openEarlyAccess(); }} className="hover:text-teal transition-colors">Terms (Placeholder)</a>
+                  <a href="#contact-placeholder" onClick={(e) => { e.preventDefault(); openEarlyAccess(); }} className="hover:text-teal transition-colors">Contact (Placeholder)</a>
+                </nav>
+              </div>
+
+              <div className="pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-charcoal/60">
+                <p>© {new Date().getFullYear()} Orenda. All rights reserved.</p>
+                <p>Initial destination coverage: Turkey • Demonstration interface preview.</p>
+              </div>
+            </div>
+          </footer>
+
+          {/* ==========================================
+              EARLY ACCESS MODAL
+          ========================================== */}
+          {modalOpen && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/60 backdrop-blur-sm"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="modal-title"
+            >
+              <div className="bg-ivory rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-floating border border-charcoal/10 relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setModalOpen(false);
+                    setFormSubmitted(false);
+                    setFormError("");
+                  }}
+                  className="absolute top-5 right-5 p-2 rounded-full text-charcoal/60 hover:text-charcoal hover:bg-sand transition-colors"
+                  aria-label="Close modal"
+                >
+                  <Icons.Close />
+                </button>
+
+                <div className="space-y-4">
+                  <span className="inline-block px-3 py-1 rounded-full bg-sand text-teal text-xs font-semibold uppercase tracking-wider">
+                    Early Access Preview
+                  </span>
+
+                  <h3 id="modal-title" className="text-2xl font-semibold text-charcoal">
+                    Plan your Turkey journey with Orenda
+                  </h3>
+
+                  <p className="text-sm text-charcoal/75 leading-relaxed">
+                    You're exploring Orenda's interactive front-end preview. Leave your email and preferred destination below to be notified as we open early access for personalized Turkey trip planning.
+                  </p>
+
+                  {!formSubmitted ? (
+                    <form onSubmit={handleEarlyAccessSubmit} className="space-y-4 pt-2" noValidate>
+                      <div>
+                        <label htmlFor="early-access-email" className="block text-xs font
